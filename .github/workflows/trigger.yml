@@ -5,13 +5,9 @@ on:
 jobs:
   process-tokens:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.FIGMA_GITHUB_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.FIGMA_GITHUB_TOKEN }}
         
       - name: Print event details
         run: |
