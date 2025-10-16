@@ -1,7 +1,7 @@
 name: Design Tokens Update
 on:
   repository_dispatch:
-    types: [update-tokens, test-event]  # Support both event types
+    types: [update-tokens, test-event, design-tokens, tokens]  # Support multiple event types
 jobs:
   process-tokens:
     runs-on: ubuntu-latest
