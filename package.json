@@ -1,0 +1,21 @@
+{
+  "name": "figma-mcp-design-tokens",
+  "version": "1.0.0",
+  "description": "Figma MCP Design Tokens with GitHub Integration",
+  "main": "index.js",
+  "scripts": {
+    "test-dispatch": "node scripts/test-github-dispatch.js",
+    "test-dispatch-env": "FIGMA_GITHUB_TOKEN=$FIGMA_GITHUB_TOKEN node scripts/test-github-dispatch.js"
+  },
+  "keywords": [
+    "figma",
+    "design-tokens",
+    "github",
+    "mcp"
+  ],
+  "author": "vishu2124",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

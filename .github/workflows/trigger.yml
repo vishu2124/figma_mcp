@@ -1,10 +1,43 @@
-name: Dispatch Trigger
+name: Design Tokens Update
 on:
   repository_dispatch:
-    types: [test-event]  # Must match the event_type sent to /dispatches
+    types: [update-tokens, test-event]  # Support both event types
 jobs:
-  trigger-job:
+  process-tokens:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.FIGMA_GITHUB_TOKEN }}
     steps:
-      - name: Print Payload
-        run: echo "Triggered with payload ${{ github.event.client_payload }}"
+      - name: Checkout code
+        uses: actions/checkout@v4
+          token: ${{ secrets.FIGMA_GITHUB_TOKEN }}
+        
+      - name: Print event details
+        run: |
+          echo "Event type: ${{ github.event.action }}"
+          echo "Payload: ${{ toJson(github.event.client_payload) }}"
+          
+      - name: Process design tokens
+        if: github.event.action == 'update-tokens'
+        run: |
+          echo "Processing design tokens from Figma..."
+          echo "Filename: ${{ github.event.client_payload.filename }}"
+          echo "Commit message: ${{ github.event.client_payload.commitMessage }}"
+          
+          # Create tokens directory if it doesn't exist
+          mkdir -p src/tokens/figma-export
+          
+          # Save the tokens to a file
+          echo '${{ github.event.client_payload.tokens }}' > src/tokens/figma-export/design-tokens.json
+          
+          # Pretty print the JSON for readability
+          cat src/tokens/figma-export/design-tokens.json | jq '.' > src/tokens/figma-export/design-tokens-formatted.json
+          
+      - name: Commit and push changes
+        if: github.event.action == 'update-tokens'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add src/tokens/figma-export/
+          git commit -m "Update design tokens from Figma: ${{ github.event.client_payload.commitMessage }}" || exit 0
+          git push
