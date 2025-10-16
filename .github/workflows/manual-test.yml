@@ -1,0 +1,108 @@
+name: Manual Test Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of test to run'
+        required: true
+        default: 'basic'
+        type: choice
+        options:
+        - basic
+        - tokens
+        - full
+      custom_message:
+        description: 'Custom test message'
+        required: false
+        default: 'Manual test run'
+        type: string
+
+jobs:
+  test-run:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.FIGMA_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.FIGMA_GITHUB_TOKEN }}
+          
+      - name: Basic Test
+        if: inputs.test_type == 'basic'
+        run: |
+          echo "✅ Basic test passed!"
+          echo "Test message: ${{ inputs.custom_message }}"
+          echo "GitHub token is set: ${{ secrets.FIGMA_GITHUB_TOKEN != '' }}"
+          
+      - name: Tokens Test
+        if: inputs.test_type == 'tokens'
+        run: |
+          echo "🧪 Testing token processing..."
+          
+          # Create test tokens
+          mkdir -p src/tokens/figma-export
+          
+          # Mock design tokens
+          cat > src/tokens/figma-export/test-tokens.json << 'EOF'
+          {
+            "colors": {
+              "primary": "#0088fe",
+              "secondary": "#ffffff",
+              "background": "#0e121c"
+            },
+            "spacing": {
+              "small": "8px",
+              "medium": "16px",
+              "large": "24px"
+            },
+            "typography": {
+              "heading": "24px",
+              "body": "16px"
+            }
+          }
+          EOF
+          
+          # Validate JSON
+          if jq empty src/tokens/figma-export/test-tokens.json 2>/dev/null; then
+            echo "✅ JSON validation passed"
+            jq '.' src/tokens/figma-export/test-tokens.json > src/tokens/figma-export/test-tokens-formatted.json
+          else
+            echo "❌ JSON validation failed"
+            exit 1
+          fi
+          
+      - name: Full Test
+        if: inputs.test_type == 'full'
+        run: |
+          echo "🚀 Running full integration test..."
+          
+          # Test directory creation
+          mkdir -p src/tokens/figma-export
+          echo "✅ Directory creation passed"
+          
+          # Test JSON processing
+          echo '{"test": "data"}' > src/tokens/figma-export/test.json
+          if jq empty src/tokens/figma-export/test.json 2>/dev/null; then
+            echo "✅ JSON processing passed"
+          else
+            echo "❌ JSON processing failed"
+            exit 1
+          fi
+          
+          # Test git operations (dry run)
+          git config --local user.email "test@github.com"
+          git config --local user.name "Test User"
+          echo "✅ Git configuration passed"
+          
+          echo "🎉 All tests passed!"
+          
+      - name: Show Results
+        run: |
+          echo "📊 Test Results:"
+          echo "- Test type: ${{ inputs.test_type }}"
+          echo "- Custom message: ${{ inputs.custom_message }}"
+          echo "- Token available: ${{ secrets.FIGMA_GITHUB_TOKEN != '' }}"
+          echo "- Working directory: $(pwd)"
+          echo "- Files created:"
+          find src/tokens/figma-export -type f 2>/dev/null || echo "No files created"

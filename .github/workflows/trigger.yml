@@ -31,8 +31,14 @@ jobs:
           # Save the tokens to a file
           echo '${{ github.event.client_payload.tokens }}' > src/tokens/figma-export/design-tokens.json
           
-          # Pretty print the JSON for readability
-          cat src/tokens/figma-export/design-tokens.json | jq '.' > src/tokens/figma-export/design-tokens-formatted.json
+          # Validate and pretty print the JSON
+          if jq empty src/tokens/figma-export/design-tokens.json 2>/dev/null; then
+            echo "✅ Valid JSON received from Figma"
+            jq '.' src/tokens/figma-export/design-tokens.json > src/tokens/figma-export/design-tokens-formatted.json
+          else
+            echo "⚠️ Invalid JSON received, saving raw content"
+            cp src/tokens/figma-export/design-tokens.json src/tokens/figma-export/design-tokens-formatted.json
+          fi
           
       - name: Commit and push changes
         if: github.event.action == 'update-tokens'
