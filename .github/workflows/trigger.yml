@@ -1,0 +1,8 @@
+on:
+  repository_dispatch:
+    types: [your-event-type]  # Matches the payload's event_type
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Triggered by dispatch!"
