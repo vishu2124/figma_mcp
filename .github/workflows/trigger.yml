@@ -5,9 +5,14 @@ on:
 jobs:
   process-tokens:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.FIGMA_GITHUB_TOKEN || github.token }}
         
       - name: Print event details
         run: |
