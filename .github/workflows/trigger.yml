@@ -29,8 +29,24 @@ jobs:
           # Create tokens directory if it doesn't exist
           mkdir -p src/tokens/figma-export
           
-          # Save the tokens to a file
-          echo '${{ github.event.client_payload.tokens }}' > src/tokens/figma-export/design-tokens.json
+          # Check if tokens are provided in client_payload
+          if [ -n "${{ github.event.client_payload.tokens }}" ]; then
+            echo "📦 Tokens provided in payload"
+            
+            # Check if tokens are compressed
+            if [ "${{ github.event.client_payload.compressed }}" = "true" ]; then
+              echo "🔧 Decompressing tokens..."
+              echo '${{ github.event.client_payload.tokens }}' | base64 -d | gunzip > src/tokens/figma-export/design-tokens.json
+              echo "✅ Tokens decompressed successfully"
+            else
+              echo "📄 Tokens are uncompressed"
+              echo '${{ github.event.client_payload.tokens }}' > src/tokens/figma-export/design-tokens.json
+            fi
+          else
+            echo "⚠️ No tokens in payload - payload might be too large"
+            echo "Creating placeholder file for large payload handling"
+            echo '{"note": "Payload too large for GitHub dispatch", "filename": "${{ github.event.client_payload.filename }}", "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' > src/tokens/figma-export/design-tokens.json
+          fi
           
           # Validate and pretty print the JSON
           if jq empty src/tokens/figma-export/design-tokens.json 2>/dev/null; then
